@@ -1,0 +1,180 @@
+---
+title: "Chapter2"
+format: html
+editor: visual
+---
+
+## Names and Values
+
+```{r}
+library(lobstr)
+```
+
+###  Binding Basics
+
+#### Exercises
+
+1. a,b,c all point to the same vector, d points to a different vector (even though they are the same value).
+
+2. These do all point to the same object. Verify:
+
+```{r}
+obj_addr(mean)
+obj_addr(base::mean)
+obj_addr(get("mean"))
+obj_addr(match.fun("mean"))
+
+```
+
+3. The automatic conversion might be problematic if the name to be converted to also exists in the data set.  Also you might not be aware of the change and this can be confusing. This can be turned off using `check.names= FALSE`, but I am not sure what happens then. Are they back ticked?  
+Also I just learned from the documentation that `make.names` is used by `read.csv` and also  avoids duplicates (`make.names` has a 'unique' argument to make this happen.) 
+
+4.  `make.names` seems to use at least these rules:
+
+- if the name starts with a digit, a decimal followed by a number, or an underscore, it prefixes it with an `X`'. 
+
+- if the name is reserved, it adds an `.` to the end.
+
+-  If `unique` is true, it will add `.1, .2, ...` to variable names as needed to deconflict them.
+
+5. `.123e1` is a number as well, so not syntatic.  The rule is that a leading `.` cannot be followed by a digit, as that could be a number.
+
+
+
+### Copy-on-Modify
+
+* Why does the author use `[[]]` everywhere?
+
+* Results are distored in RStudio since it keeps an extra reference to enable environment pane. This cause additional copies to be made when I assign to a variable because there are two references to the value and R doesnt know that the environment pane is just going to follow along.
+
+
+#### Exercises
+
+1. `tracemem(1:10)` is not useful because there are no other references to the values!
+
+2. In this case, `tracemem` we are assigning a double to a int vector, so this is confersion requires a copy to change the vector to a double vector.  The second copy only happens in RStudio or if you otherwise have a reference to this vector and is due to teh changing of the value of the 3rd element
+
+Note that when I ran this in separate interpreter, only one copy was made, the conversion copy. (If you do `x[[3]]<-2L' no copy is made)
+
+3. Instead of sketch, lets look at the refs
+
+```{r}
+a <- 1:10
+b <- list(a,a)
+c <- list(b,a, 1:10)
+ref(a,b,c)
+```
+
+
+from this you an see that b has to references to the same object as a.  Note that c has a reference to b and to a rather then just a direct reference to a.  Not sure what that means.
+
+4 .  I presume that a copy of x is made first, and then the original x is put in as teh second element of the list.  
+
+```{r}
+x <- list(1:10)
+cat("original x:",obj_addr(x),"\n\n")
+x[[2]] <- x
+ref(x)
+```
+
+This indeed is the case.
+
+Not further that the original object `1:10` is referenced twice.
+
+### Object Size
+
+#### Exercises
+
+1.  
+
+```{r}
+y<- rep(list(runif(1e4)),100)
+```
+
+
+If you run `ref(y)` you will see that y contains 100 references to the `same` vector created by runif(1e4).  obj_size correclty give the actual size, which is  not much bigger then one vector. 
+
+```{r}
+obj_size(runif(1e4))
+```
+
+Howerver object.size() must be acting as if each vector were taking up its own place in memory. The documentation says "does not detect if elements of a list are shared". Probably just recurses down the object and calculates the size of each leaf, even if that leaf is shared, which would cause a drastic overestimate for lists like `y`.
+
+2.  In the case of functions, the size is misleading because it doesn't include the size of the environment ?  The answer guide says it is misleading because these objects are always loaded so it doesnt make much sense to worry about their size.
+
+3. We know from above that runif1e6) takes up about 8 MB (since 1e4 takes 80 kb).  So my predictions are:
+
+`obj_size(a)` = 8 MB
+
+After `b<-list(a,a)`
+`obj_size(b)` = 8 MB (due to shared link, will be slightly bigger.)
+`obj_size(a,b)` = 8 MB 
+
+After `b[[1]][[1]] <- 10`
+`obj_size(b)` = 16 MB  (we changed the first vector in b so a copy was made.)
+`obj_size(a,b)` = 16 MB (b still has a copy of a as its second element)
+
+After `b[[2]][[1]] <- 10`
+`obj_size(b)`  = 16 MB
+`obj_size(a,b)` = 24 MB (Now we have three vectors involved)
+
+### Modify-in-place
+
+```{r}
+x <- data.frame(matrix(runif(5 * 1e4), ncol = 5))
+medians <- vapply(x, median, numeric(1))
+
+for (i in seq_along(medians)) {
+  x[[i]] <- x[[i]] - medians[[i]]
+}
+```
+
+```{r}
+cat(tracemem(x), "\n")
+
+
+for (i in 1:5) {
+  x[[i]] <- x[[i]] - medians[[i]]
+}
+
+
+untracemem(x)
+```
+
+```{r}
+y <- as.list(x)
+cat(tracemem(y), "\n")
+#> <0x7f80c5c3de20>
+  
+for (i in 1:5) {
+  y[[i]] <- y[[i]] - medians[[i]]
+}
+#> tracemem[0x7f80c5c3de20 -> 0x7f80c48de210]: 
+```
+
+
+Enviroments always modify in place:
+
+```{r}
+e1 <- rlang::env(a = 1, b = 2, c = 3)
+e2 <- e1
+e1$c <- 4
+e2$c
+```
+
+#### Exercises
+
+1.  x is copied before teh assignment, as discussed above exercises.
+
+2. Skipping, might come back too.
+
+3.  Presumably nothing, since copies are never made, unless explicity made. However, it is actually an error. 
+
+```{r}
+e <- rlang::env()
+tracemem(e)
+ 
+```
+
+
+
