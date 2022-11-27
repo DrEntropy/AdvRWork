@@ -1,0 +1,139 @@
+---
+title: "Chapter4"
+format: html
+editor: visual
+---
+
+## Subsetting
+
+### Single []
+
+Note that you can use names with '[]' with atomic vectors.
+
+
+```{r}
+vec <- c(a=1, b=2, c=3)
+vec['a']
+```
+
+
+#### Exercises
+
+1.  
+
+```{r}
+mtcars[mtcars$cyl == 4, ]
+mtcars[-(1:4), ]
+mtcars[mtcars$cyl <= 5,]
+mtcars[mtcars$cyl == 4 | mtcars$cyl ==  6, ]
+```
+
+2. The code:
+
+```{r}
+x <- 1:5
+x[NA]
+```
+
+Remember that NA's are logical, and so the argument is cycled to the length of x. If you use NA_real_ you will just get one NA result.
+
+3. upper.tri creates a logical matrix of the same size as its arguments, with true in the upper triangle. So if you want to just get the upper triangle of a matrix x, you could do x[upper.tri(x)]
+
+```{r}
+x <- outer(1:5, 1:5, FUN = "*")
+x_ut <- x[upper.tri(x)]
+```
+
+Weirdly x_ut is an atomic vector, which now that i think of it makes sense. So I suppose we need another rule to understand this, that if we pass a logical matrix as a subscript, it will flatten the result. 
+
+4. mtcars is 2 dimensional, so if we intend to subset rows, so we need to subset rows and columns, which is what mtcars[1:20, ] does.  However if you intended to subset columns, there are not 20 columns so this will fail. HOwver, mtcars[1:3] for example is fine and the same as mtcars[,1:3]
+
+5. I assume we will only implement the first usage, extracting the diagonal. One quick (and not efficient) solution:
+
+```{r}
+my_diag <- function(matrix)
+{
+  matrix[!(upper.tri(matrix) | lower.tri(matrix))]
+}
+```
+
+6. df[is.na(df)] <-0 replaces all na elements with zero. It uses logical subscripting.
+
+
+### Selecting single elements
+
+Note that `x$y` is "roughly equivalent" `x[["y"]]` except $ does left partial matching (not on tibbles though)
+
+#### Exercises
+
+1.
+```{r}
+mtcars$cyl[[3]]
+mtcars$cyl[3]
+mtcars[3,'cyl']
+mtcars[['cyl']][[3]]
+purrr::pluck(mtcars,'cyl',3)
+```
+
+I am sure there 1e6 more.
+
+2. 
+```{r}
+mod <- lm(mpg~ wt, data = mtcars)
+print(mod$df.residual)
+summary(mod)$r.squared
+```
+
+### Subassignment
+
+Note the use of subsetting with nothing to preserve structure:
+
+```{r}
+
+mtcars[] <- lapply(mtcars, as.integer)
+is.data.frame(mtcars)
+```
+
+### Applications
+
+* question: remind me how to get rid of the rownames ? or to reset them?
+
+```{r}
+df <- data.frame(x = c(1, 2, 3, 1, 2), y = 5:1, z = letters[1:5])
+
+test <- df[sample(nrow(df), 6, replace = TRUE), ]
+rownames(test) <- NULL
+test
+
+```
+
+#### Exercises
+
+1. 
+```{r}
+df <- data.frame(x = c(1, 2, 3, 1, 2), y = 5:1, z = letters[1:5])
+df2 <- df[,sample(ncol(df))]  # also works without the comma
+df2
+```
+
+Seems like no issue to sample rows and columns at same time to me.
+
+2. we already saw how to sample m rows
+
+```{r}
+df[sample(nrow(df),3),]
+
+```
+If they had to be contiguous, we instead should generate a single random number from 1 to the number of rows - m, and then subset that range:
+
+```{r}
+start <- sample(nrow(df)-3,1)
+df[start:(start+2),]
+```
+
+3. use order:
+
+```{r}
+mtcars[order(names(mtcars))]
+```
+
