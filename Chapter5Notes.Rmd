@@ -1,0 +1,24 @@
+# Chapter 5
+
+Short chapter...
+
+## Exercises, first part
+
+1. 
+ifelse(TRUE, 1, "no") - Double
+ifelse(FALSE, 1, "no") - Character
+ifelse(NA, 1, "no") - Logical
+
+ 
+The documentation says the the result will be the same length and class as the test, but coerced from logical to accommadate values from appropriate result.
+
+2. This works because 0 is coerced to false and nonzero to true ("truthy")
+
+## Exercises, second part
+1. Here, length(x) is 0, as is the length of out.  The loop iterates from 1 to 0, first assigning (and creating) a new element for out[1] and addigning it NA since x[1] is not defined.  Then it assigns out[0] to in[0]^2 , which is just `numeric(0)`, and this has no effect but doesn't generate an error. 
+
+2. It appears that when xs is modified, a copy is made as expected so the xs that appears in the `x in xs` does not change. (Solution set says that the `xs` in `x in xs` is evaluated once at that point, which makes sense, i think this amounts to the same thing.)
+
+3. The index is modified at the beginning of each loop.
+
+
