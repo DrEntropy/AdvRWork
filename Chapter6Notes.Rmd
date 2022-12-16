@@ -1,0 +1,71 @@
+## Chapter 6 Functions
+
+### Some key points:
+
+* Function arguments are evaluated lazily
+* Functions are first class
+* key parts of a function
+   * Formals
+   * Body
+   * Environment
+
+* Unevaluated arguments are callred Promises (e.g. Thunks in Haskell), containing:
+   * expression to be evaled
+   * environment
+   * memoized values
+   
+* Promises are like a quantum state: any attempt to inspect them with R code will force an immediate evaluation 
+
+### Selected exercises
+
+#### 6.1
+
+4) is.function and is.primitive
+
+```{r}
+objs <- mget(ls("package:base", all = TRUE), inherits = TRUE)
+funs <- Filter(is.function, objs)
+
+num_args <- lapply(funs, \(x) length(formals(x)))
+df <-  data.frame(fun_name = names(num_args), args = as.numeric(num_args))
+df <- df[order(df$args, decreasing = TRUE),]
+head(df)
+```
+
+
+Scan is the function with the most arguments.
+
+```{r}
+nrow(df[df$args == 0,])
+```
+
+251 functions with no arguments
+
+for primitive functions:
+
+```{r}
+objs <- mget(ls("package:base", all = TRUE), inherits = TRUE)
+funs <- Filter(is.primitive, objs)
+```
+
+I am not aware of any way to find the number of arguments
+
+#### 6.4
+
+3)  I got 202
+
+```{r}
+f <- function(x) {
+  f <- function(x) {
+    f <- function() {
+      x ^ 2
+    }
+    f() + 1
+  }
+  f(x) * 2
+}
+f(10)
+```
+
+#### 6.5
+ 
