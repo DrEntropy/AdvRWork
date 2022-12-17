@@ -16,6 +16,17 @@
    
 * Promises are like a quantum state: any attempt to inspect them with R code will force an immediate evaluation 
 
+* Functions can be of 4 forms: prefix, infix, replacement, and special
+
+In contrast to what the book says, for replacement form, the first argument doesnt have to be `x`. But the second does as it is not called as a positional argument.
+```{r}
+`second<-` <- function(tt, value) {
+  tt[2] <- value
+  tt
+}
+```
+
+
 ### Selected exercises
 
 #### 6.1
@@ -68,4 +79,239 @@ f(10)
 ```
 
 #### 6.5
+
+3) The function returns c(2,1)  and y is unchanged after exit. The principle is that assigning to a default argument earlier in the argument list provides a value for the default argument. 
+
+```{r}
+y <- 10
+f1 <- function(x = {y <- 1; 2}, y = 0) {
+  c(x, y)
+}
+f1()
+y
+```
+
+
+4)  The xlim default value is not evaluated until it is needed (lazy evaluation). By that time the function has used the default argument `breaks == "Sturges"` to compute a correct value for `breaks` (using `nclass.Sturges`) that can be used as `xlim`. Incidently this function is: `ceiling(log2(length(x)) + 1)`
+
+5) The function works because when `x` is evaluated, `stop` has been redefined to use `Sys.time()`. It is confusing because lookign at the signature of the function you would assume passing in no value for `x` is an error due to the `stop("Error!")`
+
+6) None. If called with  no arguments, it returns a   page of packages available (in the source it checks if `library` is missing.)
+
+#### 6.6
+
+1) For the first part:
+```{r}
+sum(1, 2, 3)
+#> [1] 6
+mean(1, 2, 3)
+#> [1] 1
+```
+
+
+sum takes `...` to sum up all the arguments, while mean takes a vector and the `...` are used for optional arguments (its an S3 method)
+
+For the second part:
+```{r}
+sum(1, 2, 3, na.omit = TRUE)
+#> [1] 7
+mean(1, 2, 3, na.omit = TRUE)
+#> [1] 1
+```
+
+Sum is tries to add all its arguments, and `na.omit` which is not one of the default arguments (`na.rm` is) TRUE is converted to 1 and added to the rest.
+Mean only takes teh mean of the first argument, na.omit is ignored
+
  
+2) To find the docs, look at ?par
+
+3) I believe it is so that you can color the points differently (you can pass a list). I dont know how to color the axes though. Probably with `axis`.  Matlab influenced i presume.
+
+##6.7
+
+1) A character vector of the names of objects created, invisibly. Invisible since you normally are only calling `load` for the side effects.
+
+2) write.table returns NULL. It might more usefully return the table string.
+
+3) Only difference is with_dir lets you specify an arbitrary working directory, while chdir is a boolean and will change to the directory of the source file if TRUE.
+
+4) I don't know enough about base R graphics to do this, but I did look at the solution.
+
+5) 
+
+```{r}
+capture.output2 <- function(code) {
+  temp <- tempfile()
+  on.exit(file.remove(temp), add = TRUE, after = TRUE)
+
+  sink(temp)
+  on.exit(sink(), add = TRUE, after = TRUE)
+
+  force(code)
+  readLines(temp)
+}
+capture.output2(cat("a","b","c", sep = '\n'))
+```
+
+The results of capture.output2 are the same as capture.output in this case.
+
+`capture.output` has additional options (for example, the name of the capture file) but works the same as far as I can tell. It looks like this:
+
+```
+function (..., file = NULL, append = FALSE, type = c("output", 
+    "message"), split = FALSE) 
+{
+    type <- match.arg(type)
+    rval <- NULL
+    closeit <- TRUE
+    if (is.null(file)) 
+        file <- textConnection("rval", "w", local = TRUE)
+    else if (is.character(file)) 
+        file <- file(file, if (append) 
+            "a"
+        else "w")
+    else if (inherits(file, "connection")) {
+        if (!isOpen(file)) 
+            open(file, if (append) 
+                "a"
+            else "w")
+        else closeit <- FALSE
+    }
+    else stop("'file' must be NULL, a character string or a connection")
+    sink(file, type = type, split = split)
+    on.exit({
+        sink(type = type, split = split)
+        if (closeit) close(file)
+    })
+    for (i in seq_len(...length())) {
+        out <- withVisible(...elt(i))
+        if (out$visible) 
+            print(out$value)
+    }
+    on.exit()
+    sink(type = type, split = split)
+    if (closeit) 
+        close(file)
+    if (is.null(rval)) 
+        invisible(NULL)
+    else rval
+}
+```
+#### 6.8
+
+1)
+```{r}
+`+`(`+`(1,2),3)
+`+`(1,`+`(2,3))
+
+x= c(1,2,3,4,5,6)
+n=4
+
+`if`(length(x) <= 5,`[[`(x,5),`[[`(x,n))
+```
+2) 
+The first one , the 20 is the first positional argument and so is `x` in the call. The same principle applied to `runif`.  
+For `cor`,  remember that arguments are first matche exactly, then by partial match, and then by position. This results in the call:
+```
+cor(x, y, use = "pairwise.complete.obs", method = "kendall") 
+``` 
+(The match on the `method` and `use` is due to using pmatch/match in the function def, although i am not sure about that.)
+
+3) 
+```{r}
+x = c(1,2,3,4,5,6)
+`modify<-` <- function(x, position, value) {
+  x[position] <- value
+  x
+}
+modify(get('x'), 1) <- 10
+```
+
+My answer: This fails because get("x") evalutes to a value (rvalue) and not a symbol
+Solution: get("x") is not evaluated, but rather in this context the expression is expanded to: 
+```
+get("x") <- `modify<-`(get("x"), 1, 10)
+```
+and it then tries to expand to `get<-` which doesnt exist.
+
+
+4) 
+```{r}
+x = c(1,2,3,4,5,6)
+`rmodify<-` <- function(x, value) {
+  position <- sample(seq_along(x),1)
+  x[position] <- value
+  x
+}
+rmodify(x) <- 10
+x
+```
+
+5)
+```{r}
+`+` <- \(a,b){
+  if(is.character(c(a,b))){
+    paste(a,b,sep ="")
+  } else {
+    base::`+`(a, b)
+  }
+}
+
+1 + 2
+
+"a" + "b"
+
+rm(`+`)
+```
+
+6)
+I couldnt figure out how to restrict to base package without looking at the solution, sadly.
+
+
+```{r}
+repl <- apropos("<-", where = TRUE, mode= "function")
+repls_base <- repls[names(repl) == length(search())]
+length(repls_base)
+ 
+```
+
+SO there are 63 replacement functions in the base package. Which are primitive? (COPY PASTA FROM SOLUTION)
+
+```{r}
+repls_base_prim <-Filter(is.primitive, mget(repls_base, envir = baseenv())) |>
+  names()
+```
+
+This seems to require knowledge that will be gained in later chapters. 
+
+7) Infix can be any sequence of characters between the '%' except '%'.
+
+8) 
+```{r}
+`%xor%` <- \(x,y){
+  xor(x,y)
+}
+
+TRUE %xor% FALSE
+```
+
+
+
+9)  
+ Used %//% because %/% is integer divide
+ 
+```{r}
+`%n%` <- \(A,B) intersect(A,B)
+`%u%` <- \(A,B) union(A,B)
+`%//%` <- \(A,B) setdiff(A,B)
+
+x <- c(1,2,3,4,5,6)
+y <- c(2,4,6,8)
+
+x%n%y
+x%u%y
+x%//%c(1,2,3)
+
+ 
+```
+
