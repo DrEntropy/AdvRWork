@@ -1,0 +1,65 @@
+## Chapter 7 Environments
+
+### Selected exercises
+
+#### Section 7.2
+
+1. Environments use reference semantics,  names are unordered, names must be unique
+
+2. 
+```{r}
+library(rlang)
+test_env <- env()
+test_env$loop <- test_env
+```
+
+3.
+```{r}
+env1 <-env()
+env2 <-env(dedoop = env1)
+env1$loop <- env2
+```
+
+4. 
+- e[[1]]  doesnt make sense because the names are unordered in an environment
+- e[c("a", "b")] would need to return two elements.  I suppose it could   create a sub environment with just those names, makes sense to me. Or a list. So I dont agree that it 'doesn't make sense'
+
+5.
+Create a version of env_poke() that will only bind new names, never re-bind old names. Some programming languages only do this, and are known as single assignment languages.
+
+```{r}
+env_poke_5 <- function(env = caller_env(), nm, value){
+  if(env_has(nm))
+     stop('name exists')
+  env_poke(env,nm,value)
+  invisible(env)
+}
+
+```
+
+6) What does this do and how does it differe from `<<-`.  Why might you prefer it.
+
+This function is like `<<-` except if there is no binding it will not bind in the global environment. This prevents some errors , since you almost never intend to bind into the global environemnt when using `<<-`.
+
+```{r}
+rebind <- function(name, value, env = caller_env()) {
+  if (identical(env, empty_env())) {
+    stop("Can't find `", name, "`", call. = FALSE)
+  } else if (env_has(env, name)) {
+    env_poke(env, name, value)
+  } else {
+    rebind(name, value, env_parent(env))
+  }
+}
+rebind("a", 10)
+#> Error: Can't find `a`
+a <- 5
+rebind("a", 10)
+a
+#> [1] 10
+```
+
+#### 7.3
+
+
+ 
