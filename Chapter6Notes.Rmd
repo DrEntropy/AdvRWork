@@ -2,14 +2,14 @@
 
 ### Some key points:
 
-* Function arguments are evaluated lazily
+* Function arguments are evaluated lazily 
 * Functions are first class
 * key parts of a function
    * Formals
    * Body
    * Environment
 
-* Unevaluated arguments are callred Promises (e.g. Thunks in Haskell), containing:
+* Unevaluated arguments are called Promises (e.g. Thunks in Haskell), containing:
    * expression to be evaled
    * environment
    * memoized values
@@ -26,6 +26,7 @@ In contrast to what the book says, for replacement form, the first argument does
 }
 ```
 
+* No tail call optimization
 
 ### Selected exercises
 
