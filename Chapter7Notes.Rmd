@@ -60,6 +60,71 @@ a
 ```
 
 #### 7.3
+1)
+
+Note that you can use an accumulator argument here too, which would make it tail recursive. R doesn't do tail call optimization so it doesnt matter. 
+
+
+```{r}
+where <- function(name, env = caller_env()) {
+  if (identical(env, empty_env())) {
+    # Base case
+    NULL
+  } else if (env_has(env, name)) {
+    # Success case
+    c(where(name, env_parent(env)), env)
+  } else {
+    # Recursive case
+    where(name, env_parent(env))
+  }
+}
+
+
+env2 = env( stop = "test")
+
+where("stop", env2)
+```
+
+2)
+
+```{r}
+fget <- function(name, env = caller_env(), inherits= TRUE) {
+  if (env_has(env, name) && is_function(env_get(env,name))) {
+    env
+  } else {
+    # Recursive case
+    if(inherits && !identical(env, empty_env()))
+       fget(name, env_parent(env))
+    else
+      stop("Funcion not found: ", name, call.= FALSE)
+  }
+}
+
+fget("stop", env2)
+```
+
+#### 7.4
+
+1) How is search_envs() different from env_parents(global_env())?
+
+search_envs() includes global_env, but not the empty_env at the root. env_parents(global_env()) doesnt include the global environment but does include the empty_env that is the root.
+
+
+3) Write an enhanced version of str() that provides more information about functions. Show where the function was found and what environment it was defined in.
+- skipping this one, seems tedious.
+
+#### 7.5
+
+Write a function that lists all the variables defined in the environment in which it was called. It should return the same results as ls().
+
+```{r}
+test_call_env <- function()
+{
+  env_names(caller_env())
+}
+
+test_call_env()
+```
 
 
  
