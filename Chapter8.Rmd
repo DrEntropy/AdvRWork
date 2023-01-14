@@ -1,0 +1,86 @@
+# Chapter 8 Notes and Exercises
+
+```{r}
+library(rlang)
+```
+## Notes
+
+
+## Exercises
+
+### 8.2.4
+
+1)
+
+```{r}
+
+file.remove.safe <- function(filename){
+  if(!file.exists(filename))
+    stop(paste0("<",filename,"> doesn't exist"), call. = FALSE)
+  file.remove(filename)
+}
+```
+
+2) appendLF (which defaults to TRUE) indicates that a character string message should have a linefeed appended.
+
+### 8.4.5
+
+1)
+```{r}
+cnd_stop <- catch_cnd(stop("An error"))
+cnd_abort <- catch_cnd(abort("An error"))
+```
+
+Inspecting these objects and examining the help reveals that the abort has some extra information, a "trace" which gives an rlang "trace" object (containing a full backtrace), as well as a "parent" (whatever that is).  
+
+2)  
+
+```{r}
+show_condition <- function(code) {
+  tryCatch(
+    error = function(cnd) "error",
+    warning = function(cnd) "warning",
+    message = function(cnd) "message",
+    {
+      code
+      NULL
+    }
+  )
+}
+
+```
+
+
+Prediction -> An error with message "error"
+```{r}
+show_condition(stop("!"))
+```
+Prediction -> Null, since the return value from `code` is unused.
+
+```{r}
+show_condition(10)
+```
+Prediction ->   "warning" only because tryCatch exists after catch
+
+```{r}
+show_condition(warning("?!"))
+```
+
+ Prediction > "message" only because tryCatch exists after catch
+ 
+```{r} 
+show_condition({
+  10
+  message("?")
+  warning("?!")
+})
+```
+
+3)
+
+When the inner `message("C")` is called, it bubbles up first to the inner handler, which calls `message("a")` which bubbles up to the outer handler which calls "message(b)" which finally prints a "b" since it isnt caught by anything., then the inner handler gets it print its "a"and finally the inner message gets to have it's "c" printed".  But what about the extra "b" ? The solution manual tries to explain it but I can't grok it.
+
+4)
+
+5)
+
