@@ -78,9 +78,56 @@ show_condition({
 
 3)
 
-When the inner `message("C")` is called, it bubbles up first to the inner handler, which calls `message("a")` which bubbles up to the outer handler which calls "message(b)" which finally prints a "b" since it isnt caught by anything., then the inner handler gets it print its "a"and finally the inner message gets to have it's "c" printed".  But what about the extra "b" ? The solution manual tries to explain it but I can't grok it.
+```{r}
+withCallingHandlers(
+  message = function(cnd) message("b"),
+  withCallingHandlers(
+    message = function(cnd) message("a"),
+    message("c")
+  )
+)
+```
+
+When the inner `message("c")` is called, it bubbles up first to the inner handler, which call's  `message("a")`, which is caught by the outer handler that calls message("b") which just prints "b" since this is handled by the global handler. It then hands `message("a")` off to the 'global' handler that prints "a".  Then the outher handler get's its turn at handling the inner `message("c")`, which causes "b" to be printed one more time, and then finally the inner `message("c)` gets handed to global handler the final 'c' is printed.
+
 
 4)
+catch_cnd source code looks lke this:
+
+```
+function (expr, classes = "condition") 
+{
+    stopifnot(is_character(classes))
+    handlers <- rep_named(classes, list(identity))
+    eval_bare(rlang::expr(tryCatch(!!!handlers, {
+        force(expr)
+        return(NULL)
+    })))
+}
+```
+This requires understanding some things that are introduced later (like '!!!' , eval_bare, etc). But I think what it does is uses a tryCatch to evaluate the expression and then capture the condition using an identity function handler.  According to the solution manual the original version of `catch_cmd` was simpler.
 
 5)
+
+The documentation of tryCatch is a bit ... opaque. After reading through I realized that arguments that match a condition class will be called when the condition matches that condition class. And further the root class for conditions is 'condition'. BTW have we covered S3 classes yet? No? No we have not.
+
+```{r}
+show_condition <- function(code) {
+  tryCatch(
+condition = function(cnd) {
+  switch(class(cnd)[1],
+      simpleWarning="warning",
+      simpleError = "error",
+      simpleMessage= "message")
+},
+    {
+      code
+      NULL
+    }
+  )
+}
+
+show_condition(warning("?!"))
+show_condition(error("f"))
+```
 
