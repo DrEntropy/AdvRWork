@@ -131,3 +131,107 @@ show_condition(warning("?!"))
 show_condition(error("f"))
 ```
 
+### 8.5.4
+
+1)
+
+```{r}
+# custom condition
+
+abort_package_not_loaded <- function(package) {
+  abort("package_not_loaded", 
+    message = glue::glue("package {package} not loaded."), 
+    package = package
+  )
+}
+
+check_package <- function(package){
+  if(!requireNamespace(package, quietly = FALSE))
+    abort_package_not_loaded(package)
+  TRUE
+}
+
+```
+
+2)
+
+Write a custom condition object that includes 'package' metadata.
+
+### Aside on argument matching
+
+```{r}
+test_fun <- function(first = NULL, second = NULL )
+  c(first,second)
+
+test_fun("1",first = "2")
+```
+
+So when an argument has no name in the call, it matches the first argument not otherwise used up.
+
+### 8.6.6.
+
+1)
+```{r}
+suppressConditions <- function(expr){
+  tryCatch(
+    error = function(cnd) invisible(cnd),
+   
+      withCallingHandlers(
+      
+        condition = function(cnd){
+          cnd_muffle(cnd)
+        } ,
+        expr
+      )
+  )
+}
+
+suppressConditions(warn("f"))
+suppressConditions(abort("f"))
+```
+
+
+2)
+There is something wierd about this. *WTF*?  When executed within the chunk the stop doesn't work.   When executed from the console , it does.  As for the actual question, the answer claims the traceback is better for 'withCallingHandlers'. 
+
+```{r}
+message2error <- function(code) {
+  withCallingHandlers( message = function(e) stop(e), code)
+}
+
+message2error({1;  message("hidden error"); NULL})
+ 
+```
+
+3) *SKIP*
+
+4)
+
+```{r}
+bottles_of_beer <- function(i = 99) {
+  message(
+    "There are ", i, " bottles of beer on the wall, ", 
+    i, " bottles of beer."
+  )
+  while(i > 0) {
+    tryCatch(
+      Sys.sleep(1),
+      interrupt = function(err) {
+        i <<- i - 1
+        if (i > 0) {
+          message(
+            "Take one down, pass it around, ", i, 
+            " bottle", if (i > 1) "s", " of beer on the wall."
+          )
+        }
+      }
+    )
+  }
+  message(
+    "No more bottles of beer on the wall, ", 
+    "no more bottles of beer."
+  )
+}
+```
+
+This illustrates that catching interupts can lead to a situation where you can't interupt at all!  
