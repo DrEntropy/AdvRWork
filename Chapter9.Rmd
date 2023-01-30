@@ -2,6 +2,8 @@
 
 * Note: Purr is awesome!
 
+* Note 2: This is the first chapter where I skipped some exercises since they were quite involved and not very well specified. 
+
 ```{r}
 library(tidyverse)
 ```
@@ -164,4 +166,31 @@ simple_reduce_2 <- function(x, f, .init = NULL) {
 
 ```
 
+3)  Haskells span returns two lists, the first being the longest sequential PREFIX of elements where the predicate is true, and the second is the 'rest' of the list.  The span specification in this problem is different. 
+ 
+ Skipping this one.
+ 
+4) Doing arg_max only, and only for numeric vectors
+
+```{r}
+arg_max <- function(x, f){
+ vs <- map_dbl(x,f)
+ x[vs == max(vs)]
+  
+}
+```
+
+5) Use modify , or modify_if to specify numeric columns.
+
+### 9.7.3
+
+1) array tries to return a matrix (or array if 1d), see solution book.
+
+2) eapply maps over environment, rapply is a recursive apply.  
+
+rapply digs deep into a structure applying f as it goes to any elements that match the classes in the `classes` argument. The how argument tells how to handle the results, for example 'replace' means replace the elements with the result of applying the function. 
+
+I don't know of any purrr equivalents  (yet)
+
+3) skipping
 
