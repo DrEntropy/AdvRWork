@@ -1,0 +1,167 @@
+# Chapter 9 notes and exercises
+
+* Note: Purr is awesome!
+
+```{r}
+library(tidyverse)
+```
+
+## Exercises
+
+### 9.2.6
+
+1.)   the functions generated contain a  call to  `pluck`
+2.)  In the case of `map(1:3, runif(2))` you will end up with a call to pluck, which is certainly not what was intended. (since the random indexed elements don't exist, you will get a list of nulls)
+
+```{r}
+as_mapper(runif(2))
+```
+3)  a).`map_dbl(df,sd)`
+    b).`map_dbl(df[map_lgl(df,is.numeric)],sd)`
+    c).`map_int(df[map_lgl(df,is.factor)],~ length(levels(.x)))`
+    
+4)
+
+```{r}
+trials <- map(1:100, ~ t.test(rpois(10, 10), rpois(7, 10)))
+pvs <- map_dbl(trials, 'p.value')
+ggplot(tibble(x=pvs), aes(x=x)) + geom_histogram(binwidth =  .1)
+```
+ 
+
+5)  
+
+```{r}
+  x <- list(
+  list(1, c(3, 9)),
+  list(c(3, 6), 7, c(4, 7, 6))
+)
+
+triple <- function(x) x * 3
+map(x, ~ map(.x,triple))
+ 
+```
+
+6) 
+```{r}
+formulas <- list(
+  mpg ~ disp,
+  mpg ~ I(1 / disp),
+  mpg ~ disp + wt,
+  mpg ~ I(1 / disp) + wt
+)
+
+map(formulas, ~lm(.x,mtcars))
+
+
+```
+
+
+7)
+
+```{r}
+bootstrap <- function(df) {
+  df[sample(nrow(df), replace = TRUE), , drop = FALSE]
+}
+
+bootstraps <- map(1:10, ~ bootstrap(mtcars))
+
+fit_and_get_r2 <- function(data)
+{
+  fit <- lm(mpg ~ disp,data)
+  summary(fit)$r.squared
+}
+map_dbl(bootstraps, fit_and_get_r2)
+
+```
+
+Answer book solution is muhc cooler :
+
+```{r}
+bootstraps %>%
+  map(~ lm(mpg ~ disp, data = .x)) %>%
+  map(summary) %>%
+  map_dbl("r.squared")
+```
+
+Although potentially slower?
+
+
+### 9.4.6
+
+1) See answer book. I gave up
+2) Original code
+
+```
+cyls <- split(mtcars, mtcars$cyl)
+paths <- file.path(temp, paste0("cyl-", names(cyls), ".csv"))
+walk2(cyls, paths, write.csv)
+```
+
+iwalk version
+
+```
+cyls <- split(mtcars, mtcars$cyl)
+paths <- file.path(temp, paste0("cyl-", names(cyls), ".csv"))
+iwalk(cyls, ~ write.csv(.x,paths[[.y]]))
+```
+
+Answer book version
+```
+cyls <- split(mtcars, mtcars$cyl)
+names(cyls) <- file.path(temp, paste0("cyl-", names(cyls), ".csv"))
+iwalk(cyls, ~ write.csv(.x, .y)
+```
+3) map2 is used to apply a transformation to two columns in mtcars using a list of functions using the same names. Pretty clever. I am sure I would never do this !
+
+The `map` approach simply makes an explicit  reference to the appropriate transformation.  
+To be honest I am not sure what kind of explanation is going to be satisfactory.  The answer book has a very long explaination.
+
+4) write.csv returns NULL, so if we use map we will get a list of NULLS
+
+### 9.6.3 
+
+1) is.na() returns a logical vector, not a single value. anyNA() is the closest to be a predicat version of is.na()
+
+
+2) Simple reduce:
+
+```{r}
+simple_reduce <- function(x, f) {
+  out <- x[[1]]
+  for (i in seq(2, length(x))) {
+    out <- f(out, x[[i]])
+  }
+  out
+}
+
+```
+
+When x is of length 0, it fails right away as it has no first element. If it has length 1, then the for loop will fail when it tries to take the second element.  
+
+To solve this, we first can check if the length is less then 2 and throw and error. We can also provide an optional .init argument to use when the length is less then 2 if it is provided.
+
+```{r}
+simple_reduce_2 <- function(x, f, .init = NULL) {
+  if(is.null(.init) && length(x) < 2)
+    stop("Provide an initial value (.init) if the length of the x is less then 2")
+  if(length(x)< 1)
+    return(.init)
+  
+  if(is.null(.init))
+  {
+    out <- x[[1]]
+    x <- x[2:length(x)]
+  } else {
+    out <- .init
+  }
+
+  for (i in seq(1, length(x))) {
+    out <- f(out, x[[i]])
+  }
+  out
+}
+
+```
+
+
