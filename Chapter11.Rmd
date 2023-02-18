@@ -1,0 +1,68 @@
+# Chapter 11 exercises
+
+
+```{r}
+library(rlang)
+library(ggplot2)
+library(dplyr)
+library(purrr)
+```
+
+## 11.2.3 Exercise 
+
+1) `Vectorize()` is a wrapper that takes a function and 'vectorizes' so that it works properly (elementwise) when applied to a vector. Internally it uses a mapply.
+
+2) `possibly()` internally uses a try catch. returning the `otherwise` argument when a failure occurs.
+
+3) `safely()` uses `capture_error`, which I could not find documented anywhere, it is in namespace:purr : 
+
+```{r}
+environment(safely)$capture_error
+```
+So once again `tryCatch` is used, forming the appropriate lists in each case. Note that `code` is not forced, lazy evaluation is being taken advantage of in this case.
+
+NB: Looking at solution i found you can also access these namespaces with three colons `purrr:::capture_output`.
+
+###  Exercises 11.3.1
+
+1) To my mind, you would like the dot to appear right after each file is downloaded so you can see progress. 
+
+2) I don't think you should memoise download.file as the data at  the url might change and you would like to capture that!
+
+* skipped 3 and 4 
+
+5)
+
+```{r}
+delay_by <- function(f, amount) {
+  force(f)
+  force(amount)
+  current_time <- NULL
+  function(...) {
+    if(!is.null(current_time))
+    {
+    delay <- amount - (as.numeric(Sys.time())- current_time)
+    } else {
+    delay <- amount
+    }
+    if(delay >0)
+        Sys.sleep(delay)
+    
+    
+    # note solution manual used on.exit to make this happen after f, which is another intepretation
+    current_time <<- as.numeric(Sys.time())
+    f(...)
+  }
+}
+system.time(runif(100))
+
+system.time(delay_by(runif, 0.1)(100))
+
+g <- delay_by(runif,1) 
+system.time({g(100);Sys.sleep(2);g(100)})
+```
+
+
+
+
+
