@@ -1,0 +1,38 @@
+## Function operator: Compose
+
+An example of a function operator that is *not* a "decorator is *function composition*
+
+The composition of a function $f$ with a function $g$ is usually denoted by
+
+$$
+h = g \circ f
+$$
+
+The meaning is that $h(x) = g(f(x))$.   We can express this in `r` as a function operator:
+
+```{r}
+`%o%` <-function(f,g) function(...) f(g(...))
+
+fourthroot <- sqrt %o% sqrt
+fourthroot(16)
+
+```
+
+`purrr::compose` does this same thing (but with more flexibility and safety.)
+
+```{r}
+not_null <- purrr::compose(`!`, is.null)
+not_null(4)
+not_null(NULL)
+```
+
+
+This can be useful, and in some languages (e.g. Haskell) the composition operator takes a central role (it's expressed by `.`), but in `r` this kind of idea is instead more commonly expressed  by the pipe:
+
+```{r}
+16 |> sqrt() |> sqrt()
+```
+
+The pipe operates on unevaluated expressions (promises), not functions.   It seems like magic right now, so I look forward to learning more in the Metaprogramming section of advanced r! 
+
+ 
