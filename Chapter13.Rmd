@@ -1,0 +1,55 @@
+# Chapter 13 (selected exercises)
+
+## 13.2.1 
+
+```{r}
+library(sloop)
+```
+
+
+1. `t.test` is a generic, which does the student t.test  on objects based on what class they are. `methods` suggests that there is only the default and `formula`. 
+
+`t.data.frame` is a method (for class data.frame, method t = transpose)
+
+5. 
+```{r}
+x <- ecdf(rpois(100, 10))
+class(x)
+```
+
+looks like it must be based on a function. Which makes sense
+
+```{r}
+typeof(unclass(x))
+```
+
+Interesting. I think this is because there is no other way to make a callable object.  Not sure though.
+
+```{r}
+attributes(x)
+```
+
+6. 
+
+```{r}
+x <- table(rpois(100,5))
+class(x)
+```
+
+```{r}
+typeof(unclass(x))
+```
+
+Underlying type is an integer array
+
+
+```{r}
+attributes(x)
+```
+
+## 13.3.4
+
+*skipping*, but I did look at the solution to #1. 
+
+They did not approach it the way i would have! I would have used ... to allow construction in the same way that lists are constructed.
+
