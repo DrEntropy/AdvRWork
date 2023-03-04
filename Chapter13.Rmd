@@ -129,8 +129,50 @@ class(mod)
 typeof(unclass(mod))
 ```
 
-Perhaps unsuprisingly lm is built on. a list
+Perhaps unsuprisingly lm is built on. a list, but as a scalar object type   (they are not equal length)
 
 2).  Continuing with lm, lets continue to try to take it apart.
+
+```{r}
+rawlm <- unclass(mod)
+attributes(rawlm)
+```
+So the lm really is just a list, with each of the necessary values .
+
+We would need to fill a list with all these things and then add the class lm. 
+
+
+## 13.6.3
+
+1.  [.Date looks like this:
+
+```
+function (x, ..., drop = TRUE) 
+{
+    .Date(NextMethod("["), oldClass(x))
+}
+
+```
+
+Looks like it uses oldClass (which i guess pulls the class? But differently then class() ? ) to reconstruct a date from whatever is returned from NextMethod, so this supports inheritence.  How it fails? The solution mentions that other attributes of the object besides the class that are used by the subclass are lost!
+
+2. SKIP
+
+3. 
+```{r}
+generic2 <- function(x) UseMethod("generic2")
+generic2.a1 <- function(x) "a1"
+generic2.a2 <- function(x) "a2"
+generic2.b <- function(x) {
+  class(x) <- "a1"
+  NextMethod()
+}
+
+generic2(structure(list(), class = c("b", "a2")))
+
+```
+
+I would expect it to return `a2` based on what the text said about the weird way NextMethod works (i.e. uses the original class list.). And it does. 
+
 
 
