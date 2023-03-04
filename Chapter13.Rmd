@@ -4,6 +4,7 @@
 
 ```{r}
 library(sloop)
+library(rlang)
 ```
 
 
@@ -52,4 +53,84 @@ attributes(x)
 *skipping*, but I did look at the solution to #1. 
 
 They did not approach it the way i would have! I would have used ... to allow construction in the same way that lists are constructed.
+
+
+## 13.4.4.
+
+1.) t.test just calls `UseMethod` so yes, it is an S3 Generic. (For t-tests)
+The following code with class test will call the method t.test (for the tranpose generic `t`) and since `t.test` doesn't exist, it will end up calling the default and taking the transpose of x.
+
+```{r}
+x <- structure(1:10, class = "test")
+t(x)
+```
+
+
+2.) 
+```{r}
+s3_methods_class("table")
+```
+
+3) 
+```{r}
+s3_methods_class("ecdf")
+```
+
+
+4) Skipping, but I would guess `print`, since it has 245 !
+
+5) 
+```{r}
+g <- function(x) {
+  x <- 10
+  #browser()
+  y <- 10
+  UseMethod("g")
+}
+g.default <- function(x) c(x = x, y = y)
+
+ 
+
+x <- 1
+y <- 1
+g(x)
+#>  x  y 
+#>  1 10
+#>  
+#>  
+```
+
+
+So x has no class, so we expect g.default to be called by UseMethod. At this point we are in an environment where x and y have both been defined to be 10.  Yet the x <- 10 does not mask  the argument value of x.   The documentation does not make this crystal clear, the closest i could find is : "UseMethod creates a new function call with arguments matched as they came in to the generic. Any local variables defined before the call to UseMethod are retained (unlike S).".  
+
+It must be low level magic because the value is definatly overwritten in the environment.  
+
+
+
+6) `[` must be a primitive generic, as it has methods ,but the source just says it is primitive. The solution is not much help, its a mess. 
+
+## 13.5.1
+
+1) I will look at  a few. 
+
+- `I`.  I() returns an object of class `AsIs`.  All it does it add "AsIs" to the classes on the object, and the underlying object is otherwise returned AS IS.   
+
+- `ecdf` we looked at this before, it is built on functions
+
+- `lm` : 
+
+```{r}
+mod <- lm(x~ y, data = data.frame( x= 1:10, y=1:10))
+class(mod)
+```
+
+
+```{r}
+typeof(unclass(mod))
+```
+
+Perhaps unsuprisingly lm is built on. a list
+
+2).  Continuing with lm, lets continue to try to take it apart.
+
 
