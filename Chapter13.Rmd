@@ -174,5 +174,6 @@ generic2(structure(list(), class = c("b", "a2")))
 
 I would expect it to return `a2` based on what the text said about the weird way NextMethod works (i.e. uses the original class list.). And it does. 
 
+# 13.7 - skipping these exercises.
 
 
