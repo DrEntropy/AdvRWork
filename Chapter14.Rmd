@@ -1,0 +1,98 @@
+# Chapter 14 (selected exercises)
+
+
+```{r}
+library(R6)
+```
+
+
+## 14.2.6 
+
+1.
+```{r}
+BankAccount <- R6::R6Class("BankAccount",
+                           public = list(
+                             deposit = \(amount) {
+                               if(amount > 0)
+                                   private$balance_ = private$balance_ + amount
+                               else 
+                                   stop("Can't deposit a negative amount", call. = FALSE)
+                             },
+                             withdraw =  \(amount) {
+                               if(amount > 0)
+                                   private$balance_ = private$balance_ - amount
+                               else 
+                                   stop("Can't withdraw a negative amount", call. = FALSE)
+                             }),
+                           private = list(
+                             balance_ = 0
+                           ),
+                           active = list(
+                             balance = \(value){
+                               if(missing(value)){
+                                 private$balance_
+                               } else {
+                                 stop("Balance is read only", call. =FALSE)
+                               }
+                             }
+                           )
+)
+
+
+BankAccountLimited <- R6::R6Class("BankAccountLimited",inherit = BankAccount,
+                                  public = list(
+                                    withdraw = \(amount){
+                                      if(amount > private$balance_)
+                                         stop("You cannot withdraw more then you have!", call. = FALSE)
+                                      else 
+                                        super$withdraw(amount)
+                                    }
+                                  ))
+
+## Skipping the third case
+```
+
+Testing
+
+```{r}
+test <- BankAccountLimited$new()
+test$deposit(1000)
+test$balance
+```
+
+```{r}
+test$withdraw(999)
+test$balance
+```
+
+```{r}
+test$withdraw(10)
+test$balance
+```
+
+
+3. You *can* model these with s3 class, you just have to pass state along on every call. But it is more straightforward as R6 class.
+
+7. 
+```{r}
+typeof(test)
+```
+
+```{r}
+attributes(test)
+```
+
+## 14.3.3
+
+1) did this already
+
+4) Can subclasses access private fields/methods from their parent?
+
+Well, they sure can, see my bank account , which relies on accessing the private balance! However the answer tries to do it with 'super' which is kind of wierd.
+
+
+
+ 
+
+
+
