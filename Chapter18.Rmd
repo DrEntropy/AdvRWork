@@ -55,5 +55,86 @@ exprs(a, .named = TRUE)
 6. Skipping
 
 
+## 19.4.8 Exercises
+
+1. Given the following defintions:
+
+```{r}
+xy <- expr(x + y)
+xz <- expr(x + z)
+yz <- expr(y + z)
+abc <- exprs(a, b, c)
+```
+
+Use quasiquotation to generate the following calls:
+
+```
+(x + y) / (y + z)
+-(x + z) ^ (y + z)
+(x + y) + (y + z) - (x + y)
+atan2(x + y, y + z)
+sum(x + y, x + y, y + z)
+sum(a, b, c)
+mean(c(a, b, c), na.rm = TRUE)
+foo(a = x + y, b = y + z)
+```
+
+```{r}
+expr(!!xy/!!yz)
+```
+
+```{r}
+expr(-(!!xy)^!!yz)
+```
+
+```{r}
+expr(((!!xy)) + !!yz - !!xy )
+```
+
+Note the double parens. Why?
 
 
+```{r}
+expr(atan2(!!xy,!!yz))
+```
+
+```{r}
+expr(sum(!!xy,!!xy, !!yz))
+```
+
+```{r}
+expr(sum(!!!abc))
+```
+
+```{r}
+expr(mean(c(!!!abc), na.rm = TRUE))
+```
+
+```{r}
+expr(foo(a = !!xy, b = !!yz))
+```
+
+(Or is there a way to use abc to generare names?)
+
+2. The following calls print the same but are different.
+
+```{r}
+(a <- expr(mean(1:10)))
+#> mean(1:10)
+(b <- expr(mean(!!(1:10))))
+#> mean(1:10)
+identical(a, b)
+#> [1] FALSE
+```
+
+Whats the difference, which one is more natural?
+
+```{r}
+lobstr::ast(!!a)
+```
+
+```{r}
+lobstr::ast(!!b)
+```
+
+ I dont know which is more natural. The solution suggests that `a` is more natural but I think 'it depends'
