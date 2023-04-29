@@ -1,0 +1,59 @@
+# Chapter 18 Selected exercises
+
+
+```{r}
+library(rlang)
+library(purrr)
+```
+
+## 19.3.6 Quoting
+
+
+1. How is `expr()` implemented ? 
+
+It is simply `\(e) { enexpr(e)}`
+
+2. Compare and contrast two functions below.  Can you predict the output?
+
+(discuss before evaluating)
+ 
+```{r}
+f1 <- function(x, y) {
+  exprs(x = x, y = y)
+}
+f2 <- function(x, y) {
+  enexprs(x = x, y = y)
+}
+f1(a + b, c + d)
+f2(a + b, c + d)
+```
+
+3. Enexpr requires its (immediate) argument to be a symbol not an expression. 
+
+```{r}
+(\(x){enexpr(2*x)})(b)
+```
+
+If the expression is missing, it returns a 'missing argument' whatever that is. Rlang has a function `is_missing()` to detect that. Copied from the solution:
+
+```{r}
+on_missing <- function(x) {enexpr(x)}
+on_missing()
+is_missing(on_missing())
+```
+
+4. Howw are `exprs(a)` and `exprs(a=)` differnet?    
+The first one returns a list with a single unnamed elemebt 'a'.  The second returns a list with a single named element $a, with no value. 
+ 
+ 
+5. `exprs` has more arguments, e.g. `.named` will generate names using for unnamed arguments. 
+
+```{r}
+exprs(a, .named = TRUE)
+```
+
+6. Skipping
+
+
+
+
