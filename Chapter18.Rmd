@@ -138,3 +138,95 @@ lobstr::ast(!!b)
 ```
 
  I dont know which is more natural. The solution suggests that `a` is more natural but I think 'it depends'
+ 
+ 
+## 19.6.5 Exercises
+
+1. Explain how this implementation of exec works:
+
+```{r}
+exec <- function(f, ..., .env = caller_env()) {
+  args <- list2(...)
+  do.call(f, args, envir = .env)
+}
+```
+
+It uses list2 to enable dynamic dots on the arguments, and then uses base r's do.call to call the function with those args.
+
+2.Skip
+
+3. Explain the problem with this implementation of `set_attr`
+
+
+```{r}
+set_attr <- function(x, ...) {
+  attr <- rlang::list2(...)
+  attributes(x) <- attr
+  x
+}
+set_attr(1:10, x = 10)
+#> Error in attributes(x) <- attr: attributes must be named
+```
+ 
+the `x` in `attr` is evaluated to the same value as the `x` in the first argument. I guess that is why so many tidy functions use `.x` so that it not a common variable name and by convention you should not otherwise use these i guess?
+
+## Map -reduce example
+
+```{r}
+intercept <- 10
+coefs <- c(x1 = 5, x2 = -4)
+coef_sym <- syms(names(coefs))
+
+## generate list of expressions (terms)
+summands <- purrr::map2(coef_sym, coefs, ~ expr((!!.x * !!.y)))
+summands <- c(intercept, summands)
+ 
+## Reduce
+
+eq <- purrr::reduce(summands, ~ expr(!!.x + !!.y))
+eq
+
+```
+
+
+More generally:
+
+```{r}
+linear <- function(var, val) {
+  var <- ensym(var)
+  coef_name <- map(seq_along(val[-1]), ~ expr((!!var)[[!!.x]]))
+
+  summands <- map2(val[-1], coef_name, ~ expr((!!.x * !!.y)))
+  summands <- c(val[[1]], summands)
+
+  reduce(summands, ~ expr(!!.x + !!.y))
+}
+
+linear(x, c(10, 5, -4))
+#> 10 + (5 * x[[1L]]) + (-4 * x[[2L]])
+```
+
+
+## 19.7.5 Exercises
+
+1. I like the 'template' approach, it seems more readable.
+
+2. Reimplement box - cox transform using `new_function`
+
+```{r}
+bc <- function(lambda) {
+  new_function(exprs(x =), 
+  if (lambda == 0) {
+    expr({log(x)})
+  } else {
+    expr( { (x ^ (!!lambda )- 1) / !!lambda })
+  })
+}
+```
+
+
+3.skip
+
+
+
+
