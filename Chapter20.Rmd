@@ -1,0 +1,104 @@
+# Chapter 20 selected exercises
+
+```{r}
+library(rlang)
+library(purrr)
+```
+
+
+## 20.2.4
+
+1)  `source` takes an argument called `local` that can have three values:
+
+- True: use the environment from which it is called
+- False: Use global
+- an environment
+
+2) 
+4
+4
+and just the expression without the outer `expr`.
+
+## 20.3.6
+
+1)   q1 -> 1
+     q2 -> 11
+     q3 -> 111
+
+2)
+```{r}
+enenv <- function(arg) {
+  qarg <- enquo(arg)
+  get_env(qarg)
+}
+```
+
+
+## 20.4.6
+
+1) So that later transforms can make use of earlier ones.
+
+3) Is pretty cool, see solution manual
+
+## 20.5.4 
+
+1)  The original threshold_var uses `[[` . I dont know why they coerced it to a string, it works even if you dont.
+
+```{r}
+
+sample_df <- data.frame(a = 1:5, b = 5:1, c = c(5, 3, 1, 4, 1))
+
+subset2 <- function(data, rows) {
+  rows <- enquo(rows)
+  rows_val <- eval_tidy(rows, data)
+  stopifnot(is.logical(rows_val))
+
+  data[rows_val, , drop = FALSE]
+}
+
+threshold_var <- function(df, var, val) {
+  var <- as_string(ensym(var))
+  subset2(df, .data[[var]] >= !!val)
+}
+
+
+df <- data.frame(x = 1:10)
+threshold_var(df, x, 8)
+```
+
+the new version is, and doesn't need to convert var to a string to use `[[` since it uses `$` instead..  
+
+```{r}
+threshold_var <- function(df, var, val) {
+  var <- ensym(var)
+  subset2(df, `$`(.data, !!var) >= !!val)
+}
+
+df <- data.frame(x = 1:10)
+threshold_var(df, x, 8)
+```
+
+ 
+
+## 20.6.3 
+Skipping all these base R things.  read the solutions though.
+
+However i copy in the solution for number 3 for future reference, it is useful!
+
+```{r}
+lm_wrap <- function(pred, resp = mpg, data = mtcars, 
+                    env = caller_env()) {
+  pred <- enexpr(pred)
+  resp <- enexpr(resp)
+  data <- enexpr(data)
+  
+  formula <- expr(!!resp ~ !!pred)
+  lm_call <- expr(lm(!!formula, data = !!data))
+  eval(lm_call, envir = env)
+}
+
+ 
+```
+
+
+This allows you to write  `lm(mpg ~ disp, data = mtcars)` as `lm_wrap(disp)`  which is useful if you are testing a lot of models that only differ by the predictors!
